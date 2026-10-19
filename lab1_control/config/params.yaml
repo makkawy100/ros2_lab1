@@ -1,0 +1,12 @@
+go_to_pose_server:
+  ros__parameters:
+    max_linear_speed: 2.0
+    max_angular_speed: 2.0
+draw_square_server:
+  ros__parameters:
+    side_length: 2.0
+reset_service:
+  ros__parameters:
+    initial_x: 5.544445
+    initial_y: 5.544445
+    initial_theta: 0.0

@@ -1,0 +1,6 @@
+---
+bool success
+string message
+---
+int32 current_side
+float64 distance_remaining
