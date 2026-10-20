@@ -6,8 +6,8 @@ Design of Mechatronics Systems, Alexandria University (ROS 2 Humble)
 | Name | ID |
 |------|----|
 | Youssef Mahmoud | 9385 |
-| TODO: member 2 | TODO |
-| TODO: member 3 | TODO |
+| : member 2 |  |
+| : member 3 |  |
 
 ## Packages
 - `lab1_interfaces`: custom interfaces
