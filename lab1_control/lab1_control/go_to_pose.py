@@ -14,6 +14,18 @@ from lab1_interfaces.action import GoToPose
 from lab1_interfaces.srv import SetSpeedLimits
 
 
+# Closed-loop tuning.  The turtle is driven from odometry, so the tolerances
+# below decide how exact the drawn shape is: 2 mm / ~1 degree.
+CONTROL_PERIOD = 0.02      # seconds between control updates
+POSITION_TOL = 0.002       # metres - accept a target only this close
+YAW_TOL = 0.02             # radians - final heading tolerance (~1.1 deg)
+ALIGN_TOL = 0.05           # radians - rotate on the spot above this error
+POSITION_GAIN = 2.5        # 1/s - speed per metre of remaining distance
+TURN_GAIN = 4.0            # 1/s - angular speed per radian of heading error
+DRIVE_TURN_GAIN = 2.0      # 1/s - heading correction while driving
+MIN_SPEED = 0.01           # m/s - keeps the last millimetres from stalling
+
+
 class GoToPoseServer(Node):
     def __init__(self):
         super().__init__('go_to_pose_server')
@@ -106,19 +118,27 @@ class GoToPoseServer(Node):
                 goal_handle.publish_feedback(feedback)
 
                 cmd = Twist()
-                if distance > 0.05:
+                if distance > POSITION_TOL:
                     angle_error = self.normalize_angle(
                         math.atan2(dy, dx) - self.pose.theta)
-                    if abs(angle_error) > 0.08:
-                        cmd.angular.z = self.clamp(4.0 * angle_error, max_ang)
+
+                    if abs(angle_error) > ALIGN_TOL:
+                        # Point at the target first: no forward motion, so the
+                        # corner is not cut short.
+                        cmd.angular.z = self.clamp(TURN_GAIN * angle_error, max_ang)
                     else:
-                        cmd.linear.x = min(max_lin, max(0.3, 1.5 * distance))
-                        cmd.angular.z = self.clamp(2.0 * angle_error, max_ang)
+                        # Brake proportionally to the remaining distance so the
+                        # turtle settles on the target instead of overshooting.
+                        speed = min(max_lin, max(MIN_SPEED,
+                                                 POSITION_GAIN * distance))
+                        cmd.linear.x = speed
+                        cmd.angular.z = self.clamp(
+                            DRIVE_TURN_GAIN * angle_error, max_ang)
                 else:
                     yaw_error = self.normalize_angle(
                         target.yaw - self.pose.theta)
-                    if abs(yaw_error) > 0.05:
-                        cmd.angular.z = self.clamp(4.0 * yaw_error, max_ang)
+                    if abs(yaw_error) > YAW_TOL:
+                        cmd.angular.z = self.clamp(TURN_GAIN * yaw_error, max_ang)
                     else:
                         self.cmd_pub.publish(Twist())
                         goal_handle.succeed()
@@ -127,7 +147,7 @@ class GoToPoseServer(Node):
                         return result
 
                 self.cmd_pub.publish(cmd)
-                time.sleep(0.05)
+                time.sleep(CONTROL_PERIOD)
 
             goal_handle.abort()
             result.success = False
