@@ -23,7 +23,7 @@ Design of Mechatronics Systems, Alexandria University (ROS 2 Humble)
 ## Build
 ```bash
 mkdir -p ~/ros2_lab1/src && cd ~/ros2_lab1/src
-git clone <REPO_URL> .
+git clone https://github.com/yoyo88888/ros2_lab1.git .
 cd ~/ros2_lab1
 source /opt/ros/humble/setup.bash
 colcon build
